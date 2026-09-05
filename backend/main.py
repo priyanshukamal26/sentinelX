@@ -390,14 +390,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow Vercel frontend
+# CORS — allow all Vercel frontend domains
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://*.vercel.app",
-    ],
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
