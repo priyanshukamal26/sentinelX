@@ -361,6 +361,7 @@ export default function OrderDetailPage() {
         onClose={() => setIsNudgeModalOpen(false)}
         orderId={order.id}
         orderValue={order.order_value}
+        existingNudgeUrl={hasNudge ? order.nudges[0]?.payment_link_url : undefined}
         onNudgeComplete={loadOrder}
       />
     </div>
