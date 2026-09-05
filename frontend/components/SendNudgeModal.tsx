@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Send, CreditCard, CheckCircle2, ExternalLink, AlertTriangle, Loader2 } from "lucide-react";
 import { sendNudge, simulatePayment } from "@/lib/api";
 
@@ -29,17 +29,23 @@ export default function SendNudgeModal({
     payment_link_url: string;
     discount_percent: number;
     status: string;
-  } | null>(
-    existingNudgeUrl
-      ? {
-          nudge_id: "active",
-          payment_link_url: existingNudgeUrl,
-          discount_percent: 5,
-          status: "created",
-        }
-      : null
-  );
+  } | null>(null);
   const [paidSuccess, setPaidSuccess] = useState(false);
+
+  useEffect(() => {
+    if (existingNudgeUrl) {
+      setNudgeResult({
+        nudge_id: "active",
+        payment_link_url: existingNudgeUrl,
+        discount_percent: 5,
+        status: "created",
+      });
+    } else {
+      setNudgeResult(null);
+    }
+    setPaidSuccess(false);
+    setError(null);
+  }, [existingNudgeUrl, isOpen]);
 
   if (!isOpen) return null;
 
@@ -70,10 +76,14 @@ export default function SendNudgeModal({
 
   const handleSimulatePayment = async () => {
     setPaying(true);
+    setError(null);
     try {
       await simulatePayment(orderId);
       setPaidSuccess(true);
       if (onNudgeComplete) onNudgeComplete();
+      setTimeout(() => {
+        onClose();
+      }, 1400);
     } catch (err: any) {
       setError(err.message || "Failed to simulate payment completion");
     } finally {
@@ -192,7 +202,7 @@ export default function SendNudgeModal({
               {paidSuccess ? (
                 <div className="p-3 rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2 font-medium animate-in fade-in">
                   <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                  Order converted to Prepaid! Audit log updated.
+                  Payment Successful! Updating Order & Audit Trail...
                 </div>
               ) : (
                 <button
