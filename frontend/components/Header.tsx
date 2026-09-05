@@ -11,6 +11,7 @@ export default function Header() {
 
   const navLinks = [
     { label: "Dashboard", href: "/dashboard" },
+    { label: "Analytics", href: "/analytics" },
     { label: "Metrics", href: "/metrics" },
     { label: "Audit", href: "/audit" },
     { label: "About", href: "/about" },
@@ -63,10 +64,22 @@ export default function Header() {
         </nav>
 
         {/* Right CTA - Desktop */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2.5">
+          <Link
+            href="/dashboard/settings"
+            className="text-xs text-neutral-400 hover:text-white px-2.5 py-1.5 rounded transition-colors"
+          >
+            Settings
+          </Link>
+          <Link
+            href="/login"
+            className="btn btn-ghost text-xs py-1.5 px-3"
+          >
+            Portal
+          </Link>
           {pathname !== "/dashboard" && !pathname.startsWith("/dashboard/") && (
-            <Link href="/dashboard" className="btn btn-solid text-xs font-semibold">
-              View Dashboard
+            <Link href="/dashboard" className="btn btn-solid text-xs font-semibold py-1.5 px-3">
+              Dashboard
               <ArrowUpRight className="w-3.5 h-3.5 ml-0.5" />
             </Link>
           )}
@@ -104,6 +117,20 @@ export default function Header() {
                 </Link>
               );
             })}
+            <Link
+              href="/dashboard/settings"
+              onClick={() => setMobileMenuOpen(false)}
+              className="nav-pill w-full justify-center !h-12 !text-base text-neutral-300"
+            >
+              Settings
+            </Link>
+            <Link
+              href="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="btn btn-ghost w-full justify-center !h-12 !text-base"
+            >
+              Merchant Portal
+            </Link>
           </div>
 
           <div className="pt-4 border-t border-white/10">

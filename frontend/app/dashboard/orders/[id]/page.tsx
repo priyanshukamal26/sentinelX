@@ -25,26 +25,32 @@ export default function OrderDetailPage() {
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [isNudgeModalOpen, setIsNudgeModalOpen] = useState(false);
 
-  const loadOrder = async () => {
+  const loadOrder = async (isInitial = false) => {
     if (!orderId) return;
-    setLoading(true);
+    if (isInitial) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
     try {
       const data = await fetchOrderDetail(orderId);
       setOrder(data);
     } catch (err) {
       console.error("Failed to load order:", err);
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    loadOrder();
+    loadOrder(true);
   }, [orderId]);
 
-  if (loading) {
+  if (loading && !order) {
     return (
       <div className="max-w-5xl mx-auto px-6 py-16 text-center text-neutral-400">
         Loading order details...
