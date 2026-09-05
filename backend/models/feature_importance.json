@@ -1,0 +1,16 @@
+{
+  "payment_mode_cod": 0.7972,
+  "order_value": 0.3562,
+  "address_char_length": 0.1951,
+  "order_hour": 0.1853,
+  "is_first_order": 0.1597,
+  "estimated_delivery_days": 0.1564,
+  "city_tier": 0.0692,
+  "product_category_apparel": 0.0532,
+  "product_category_electronics": 0.0465,
+  "zone_complexity_medium": 0.0446,
+  "device_type_mobile": 0.0342,
+  "product_category_grocery": 0.0312,
+  "zone_complexity_high": 0.0142,
+  "has_landmark_keyword": 0.0054
+}
