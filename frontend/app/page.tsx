@@ -280,19 +280,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-white/10 py-8 px-6 text-center text-xs text-neutral-400 space-y-3">
-        <div>
-          SentinelX · Built for <strong>Razorpay AI Buildathon (Track 02: AI Risk Manager)</strong>
-        </div>
-        <div className="flex justify-center gap-4 text-neutral-300 font-medium">
-          <Link href="/dashboard" className="hover:underline">Dashboard</Link>
-          <Link href="/metrics" className="hover:underline">Held-Out Metrics</Link>
-          <Link href="/audit" className="hover:underline">Audit Trail</Link>
-          <Link href="/about" className="hover:underline">About & Tech Stack</Link>
-        </div>
-      </footer>
     </div>
   );
 }

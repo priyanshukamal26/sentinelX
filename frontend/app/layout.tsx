@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import GrainOverlay from "@/components/GrainOverlay";
 
 const inter = Inter({
@@ -42,6 +43,7 @@ export default function RootLayout({
         <GrainOverlay />
         <Header />
         <main className="flex-1 flex flex-col">{children}</main>
+        <Footer />
       </body>
     </html>
   );
