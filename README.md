@@ -42,47 +42,7 @@ Traditional fraud prevention engines rely on blunt blacklisting: they block or r
 
 ## 3. Core System Architecture
 
-```
-                                  [ CUSTOMER / CLIENT ]
-                                             │
-                       ┌─────────────────────┴─────────────────────┐
-                       ▼                                           ▼
-          [ D2C Merchant Storefront ]                 [ Direct Link / WhatsApp ]
-           (Shopify / WooCommerce / Custom)            (Prepaid Nudge Checkout)
-                       │                                           │
-                       │ POST /orders                              │ GET /nudge/[id]
-                       ▼                                           ▼
-       ┌────────────────────────────────────────────────────────────────────────┐
-       │                     VERCEL EDGE PLATFORM (Next.js 16)                  │
-       │  • "Operational Black" Glassmorphic Design System                      │
-       │  • Public Interactive Landing Page (ROI Calculator + Hero Scorer)      │
-       │  • Multi-Tenant Merchant Portal (Urban Vogue, KicksIndia, Aura)       │
-       │  • Hackathon Judge Master View (Cross-Account Unified Stream)          │
-       │  • Regional Risk Analytics & Pincode Heatmap (/analytics)              │
-       └───────────────────────────────────┬────────────────────────────────────┘
-                                           │ HTTPS / JSON (X-SentinelX-Key)
-                                           ▼
-       ┌────────────────────────────────────────────────────────────────────────┐
-       │                     RENDER CLOUD API (FastAPI / Uvicorn)               │
-       │  • Pincode Directory & City-Tier Geocoding (2,277 Postal Zones)        │
-       │  • Feature Engineering Pipeline (features.py — 10 Behavioral Signals)  │
-       │  • XGBoost Risk Classifier (Joblib In-Memory Inference)               │
-       │  • SHAP TreeExplainer (Exact Per-Feature Margin Attributions)          │
-       │  • Groq LLM Plain-English Explainability Synthesizer                   │
-       │  • Razorpay Payment Links API Integration (Test Mode)                  │
-       │  • HMAC-SHA256 Webhook Verification Engine                             │
-       └──────────────────────┬───────────────────────────┬─────────────────────┘
-                              │                           │
-                              ▼                           ▼
-       ┌──────────────────────────────┐        ┌────────────────────────────────┐
-       │   NEON SERVERLESS POSTGRES   │        │     RAZORPAY PAYMENT GATEWAY   │
-       │  • orders                    │        │  • Payment Links API           │
-       │  • nudges                    │◄───────┤  • Standard Checkout           │
-       │  • payments                  │ Webhook│  • Webhook Dispatcher          │
-       │  • audit_log                 │        │    (payment.link.paid)         │
-       │  • model_metrics             │        └────────────────────────────────┘
-       └──────────────────────────────┘
-```
+<img width="1024" height="682" alt="image" src="https://github.com/user-attachments/assets/03396c21-0d74-45e2-90ef-ecc13518f6cc" />
 
 ---
 
