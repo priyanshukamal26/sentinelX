@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { Search, Filter, ChevronDown, ChevronRight, FileText, CheckCircle2 } from "lucide-react";
 import { fetchAuditLog, AuditEntry } from "@/lib/api";
 
@@ -116,7 +116,7 @@ export default function AuditPage() {
                     : "—";
 
                   return (
-                    <tbody key={entry.id} className="group">
+                    <Fragment key={entry.id}>
                       <tr
                         onClick={() => setExpandedId(isExpanded ? null : entry.id)}
                         className="hover:bg-white/[0.03] transition-colors cursor-pointer"
@@ -179,7 +179,7 @@ export default function AuditPage() {
                           </td>
                         </tr>
                       )}
-                    </tbody>
+                    </Fragment>
                   );
                 })
               )}

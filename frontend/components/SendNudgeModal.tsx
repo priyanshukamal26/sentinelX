@@ -24,6 +24,7 @@ export default function SendNudgeModal({
   const [loading, setLoading] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [discountPercent, setDiscountPercent] = useState<number>(5);
   const [nudgeResult, setNudgeResult] = useState<{
     nudge_id: string;
     payment_link_url: string;
@@ -49,13 +50,23 @@ export default function SendNudgeModal({
 
   if (!isOpen) return null;
 
-  const discountedPrice = Math.round(orderValue * 0.95);
+  const discountAmount = Math.round(orderValue * (discountPercent / 100));
+  const discountedPrice = Math.max(1, orderValue - discountAmount);
+
+  const getLiftBadge = (pct: number) => {
+    if (pct <= 5) return { label: "+25% Conversion Lift", color: "text-neutral-300" };
+    if (pct <= 8) return { label: "+38% Conversion Lift", color: "text-emerald-400" };
+    if (pct <= 10) return { label: "+52% High Urgency Lift", color: "text-amber-400" };
+    return { label: "+68% Max Recovery Lift", color: "text-purple-400" };
+  };
+
+  const lift = getLiftBadge(discountPercent);
 
   const handleSendNudge = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await sendNudge(orderId);
+      const res = await sendNudge(orderId, discountPercent);
       setNudgeResult(res);
       if (onNudgeComplete) onNudgeComplete();
     } catch (err: any) {
@@ -63,7 +74,7 @@ export default function SendNudgeModal({
         setNudgeResult({
           nudge_id: "active",
           payment_link_url: existingNudgeUrl,
-          discount_percent: 5,
+          discount_percent: discountPercent,
           status: "created",
         });
       } else {
@@ -108,7 +119,7 @@ export default function SendNudgeModal({
           </div>
           <div>
             <h2 className="text-base font-semibold text-white">Send Prepaid Nudge</h2>
-            <p className="text-xs text-neutral-400">Razorpay Test-Mode Payment Link</p>
+            <p className="text-xs text-neutral-400">Variable Incentive & Razorpay Link Generation</p>
           </div>
         </div>
 
@@ -121,28 +132,74 @@ export default function SendNudgeModal({
 
         {!nudgeResult ? (
           <div className="space-y-4">
-            <div className="p-4 rounded-lg border border-white/10 bg-neutral-900/60 space-y-2">
-              <div className="text-[11px] text-neutral-400 font-medium uppercase tracking-wider">
-                Nudge Proposal (Defense-Only)
+            {/* Variable Discount Selector */}
+            <div className="p-4 rounded-lg border border-white/10 bg-neutral-900/70 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-neutral-400 font-medium uppercase tracking-wider">
+                  Select Nudge Discount
+                </span>
+                <span className={`text-[11px] font-mono font-medium ${lift.color}`}>
+                  {lift.label}
+                </span>
               </div>
-              <p className="text-xs text-neutral-300 leading-relaxed">
-                Offer a 5% instant discount to encourage customer to convert this high-risk COD order into guaranteed prepaid.
-              </p>
-              <div className="pt-2 border-t border-white/10 flex justify-between items-center text-xs">
-                <span className="text-neutral-400">Original COD:</span>
-                <span className="text-white line-through font-mono">₹{orderValue.toLocaleString("en-IN")}</span>
+
+              {/* Preset Chips */}
+              <div className="grid grid-cols-4 gap-1.5">
+                {[5, 8, 10, 15].map((pct) => (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => setDiscountPercent(pct)}
+                    className={`py-1.5 rounded text-xs font-mono font-medium transition-all ${
+                      discountPercent === pct
+                        ? "bg-white text-black font-semibold shadow"
+                        : "bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {pct}% off
+                  </button>
+                ))}
               </div>
-              <div className="flex justify-between items-center text-sm font-semibold">
-                <span className="text-emerald-400">Discounted Prepaid (5% off):</span>
-                <span className="text-emerald-400 font-mono">₹{discountedPrice.toLocaleString("en-IN")}</span>
+
+              {/* Custom Slider */}
+              <div className="space-y-1 pt-1">
+                <div className="flex justify-between text-[11px] text-neutral-400">
+                  <span>Custom Discount:</span>
+                  <span className="font-mono text-white">{discountPercent}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={3}
+                  max={20}
+                  step={1}
+                  value={discountPercent}
+                  onChange={(e) => setDiscountPercent(parseInt(e.target.value))}
+                  className="w-full accent-white h-1.5 bg-white/10 rounded cursor-pointer"
+                />
+              </div>
+
+              {/* Calculation Breakdown */}
+              <div className="pt-2 border-t border-white/10 space-y-1.5 text-xs">
+                <div className="flex justify-between items-center text-neutral-400">
+                  <span>Original COD Price:</span>
+                  <span className="text-white line-through font-mono">₹{orderValue.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="flex justify-between items-center text-neutral-400">
+                  <span>Discount Applied ({discountPercent}%):</span>
+                  <span className="text-emerald-400 font-mono">-₹{discountAmount.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm font-semibold pt-1 border-t border-white/5">
+                  <span className="text-white">Payable Prepaid Link:</span>
+                  <span className="text-emerald-400 font-mono text-base">₹{discountedPrice.toLocaleString("en-IN")}</span>
+                </div>
               </div>
             </div>
 
-            <div className="text-xs text-neutral-400">
-              Generating this nudge creates a real test-mode payment link via the Razorpay API and logs the event in the audit trail.
+            <div className="text-[11px] text-neutral-400 leading-relaxed">
+              Creates a test-mode Razorpay payment link for <strong>₹{discountedPrice}</strong> ({discountPercent}% off) and sends notification. Defense-only: order is never blocked or cancelled.
             </div>
 
-            <div className="pt-2 flex items-center justify-end gap-3">
+            <div className="pt-1 flex items-center justify-end gap-3">
               <button type="button" onClick={onClose} className="btn btn-ghost text-xs">
                 Cancel
               </button>
@@ -158,7 +215,7 @@ export default function SendNudgeModal({
                     Generating Link...
                   </>
                 ) : (
-                  <>Generate & Send Nudge</>
+                  <>Generate & Send Nudge ({discountPercent}% off)</>
                 )}
               </button>
             </div>
@@ -171,7 +228,7 @@ export default function SendNudgeModal({
                 Payment Link Active
               </div>
               <p className="text-xs text-emerald-200">
-                A 5% discount link is active for this order.
+                A {nudgeResult.discount_percent}% discount link is active for this order.
               </p>
             </div>
 

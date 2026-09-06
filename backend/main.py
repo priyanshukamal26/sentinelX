@@ -434,6 +434,11 @@ class NudgeResponse(BaseModel):
     status: str
 
 
+class NudgeCreate(BaseModel):
+    discount_percent: Optional[float] = 5.0
+    channel: Optional[str] = "web"
+
+
 # ─── Helper functions ───
 def get_risk_band(score: float) -> str:
     """Per 03_sitemap_and_pages.md: green <40%, amber 40-75%, red >75%."""
@@ -728,6 +733,7 @@ async def get_order(order_id: str, db: Session = Depends(get_db)):
 @app.post("/orders/{order_id}/nudge")
 async def send_nudge(
     order_id: str,
+    nudge_data: Optional[NudgeCreate] = None,
     db: Session = Depends(get_db),
     x_sentinelx_key: str = Header(None),
 ):
@@ -762,8 +768,11 @@ async def send_nudge(
                 "code": "nudge_exists"
             })
     
-    # Calculate discounted amount
-    discount_percent = 5
+    # Calculate discounted amount from variable request (default 5%)
+    discount_percent = float(nudge_data.discount_percent if (nudge_data and nudge_data.discount_percent is not None) else 5.0)
+    discount_percent = max(1.0, min(30.0, discount_percent))
+    channel = nudge_data.channel if (nudge_data and nudge_data.channel) else "web"
+    
     original_amount = float(order.order_value)
     discounted_amount = round(original_amount * (1 - discount_percent / 100), 2)
     amount_paise = int(discounted_amount * 100)
@@ -810,7 +819,7 @@ async def send_nudge(
         payment_link_id=payment_link_id,
         payment_link_url=payment_link_url,
         discount_percent=discount_percent,
-        channel="web",
+        channel=channel,
         sent_at=datetime.now(IST),
     )
     db.add(nudge)

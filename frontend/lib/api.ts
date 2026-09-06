@@ -166,7 +166,11 @@ export async function createOrder(data: {
   return await res.json();
 }
 
-export async function sendNudge(orderId: string): Promise<{
+export async function sendNudge(
+  orderId: string,
+  discountPercent: number = 5,
+  channel: string = "web"
+): Promise<{
   nudge_id: string;
   payment_link_url: string;
   discount_percent: number;
@@ -178,6 +182,10 @@ export async function sendNudge(orderId: string): Promise<{
       "Content-Type": "application/json",
       "X-SentinelX-Key": API_KEY,
     },
+    body: JSON.stringify({
+      discount_percent: discountPercent,
+      channel: channel,
+    }),
   });
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));

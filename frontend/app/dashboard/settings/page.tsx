@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { Sliders, Key, ShieldCheck, Save, CheckCircle2, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Sliders, Key, ShieldCheck, Save, CheckCircle2, RefreshCw, Store } from "lucide-react";
+import {
+  getCurrentUser,
+  getAccountSettings,
+  saveAccountSettings,
+  MerchantProfile,
+} from "@/lib/auth";
 
 export default function SettingsPage() {
+  const [currentUser, setCurrentUser] = useState<MerchantProfile | null>(null);
   const [threshold, setThreshold] = useState("0.4467");
   const [discount, setDiscount] = useState("5");
   const [razorpayKeyId, setRazorpayKeyId] = useState("rzp_test_sample_key_id_12345");
@@ -12,8 +19,29 @@ export default function SettingsPage() {
   const [storeName, setStoreName] = useState("SentinelX Demo Store");
   const [saved, setSaved] = useState(false);
 
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (user) {
+      setCurrentUser(user);
+      const settings = getAccountSettings(user.id);
+      setThreshold(String(settings.threshold));
+      setDiscount(String(settings.discount));
+      setStoreName(user.name);
+      if (settings.razorpayKeyId) setRazorpayKeyId(settings.razorpayKeyId);
+    }
+  }, []);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    if (currentUser) {
+      saveAccountSettings(currentUser.id, {
+        threshold: parseFloat(threshold),
+        discount: parseInt(discount),
+        storeName: storeName.trim() || currentUser.name,
+        razorpayKeyId,
+        razorpayWebhookSecret: webhookSecret,
+      });
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -29,14 +57,24 @@ export default function SettingsPage() {
           </h1>
         </div>
         <p className="text-xs text-neutral-400 mt-1">
-          Customize decision thresholds, Razorpay prepaid incentive discounts, and API webhooks
+          {currentUser ? (
+            <span>
+              Configuring profile for:{" "}
+              <strong className="text-white font-medium">
+                {currentUser.avatar} {currentUser.name}
+              </strong>{" "}
+              ({currentUser.isJudge ? "Judge Master Mode" : currentUser.category})
+            </span>
+          ) : (
+            "Customize decision thresholds, Razorpay prepaid incentive discounts, and API webhooks"
+          )}
         </p>
       </div>
 
       {saved && (
         <div className="p-3.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs flex items-center gap-2 font-medium animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          Settings saved successfully! Risk threshold & Razorpay configurations updated.
+          Settings saved successfully for {currentUser?.name || "account"}! Active threshold & Razorpay configurations updated.
         </div>
       )}
 
@@ -46,10 +84,10 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold text-white uppercase tracking-wider">
-                1. Decision Threshold Tuning
+                1. Account-Specific Decision Threshold
               </h2>
               <p className="text-neutral-400 text-[11px] mt-0.5">
-                Orders with risk probability above this cutoff trigger a prepaid nudge.
+                Orders with risk probability above this cutoff trigger a prepaid nudge for {currentUser?.name || "your store"}.
               </p>
             </div>
             <span className="font-mono text-emerald-400 font-bold text-sm bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded">
@@ -68,9 +106,9 @@ export default function SettingsPage() {
               className="w-full h-2 rounded-lg bg-neutral-800 accent-emerald-500 cursor-pointer"
             />
             <div className="flex justify-between text-[11px] text-neutral-400 font-mono">
-              <span>0.3000 (Aggressive)</span>
-              <span className="text-neutral-300">0.4467 (F1 Optimal)</span>
-              <span>0.7000 (Conservative)</span>
+              <span>0.3000 (Aggressive Nudging)</span>
+              <span className="text-neutral-300">0.4467 (F1 Optimal Baseline)</span>
+              <span>0.7000 (Conservative Nudging)</span>
             </div>
           </div>
         </div>
@@ -79,15 +117,15 @@ export default function SettingsPage() {
         <div className="p-6 rounded-xl border border-white/10 bg-[#0a0a0a] space-y-4">
           <div>
             <h2 className="text-sm font-semibold text-white uppercase tracking-wider">
-              2. Prepaid Nudge Discount %
+              2. Default Prepaid Nudge Discount %
             </h2>
             <p className="text-neutral-400 text-[11px] mt-0.5">
-              The instant discount offered to high-risk COD buyers to convert them to UPI/Card.
+              The default instant discount suggested when opening the nudge modal for high-risk COD buyers.
             </p>
           </div>
 
           <div className="grid grid-cols-4 gap-3">
-            {["3", "5", "7", "10"].map((d) => (
+            {["3", "5", "8", "10"].map((d) => (
               <button
                 key={d}
                 type="button"
@@ -98,7 +136,7 @@ export default function SettingsPage() {
                     : "border-white/10 bg-white/[0.03] text-neutral-300 hover:border-white/30"
                 }`}
               >
-                {d}% Discount
+                {d}% Default
               </button>
             ))}
           </div>
@@ -139,29 +177,48 @@ export default function SettingsPage() {
                 className="w-full px-3 py-2 rounded-lg bg-neutral-900 border border-white/15 text-white font-mono focus:outline-none focus:border-white/40"
               />
             </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-neutral-300 font-medium mb-1">
+                Webhook Secret Key
+              </label>
+              <input
+                type="text"
+                value={webhookSecret}
+                onChange={(e) => setWebhookSecret(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg bg-neutral-900 border border-white/15 text-white font-mono focus:outline-none focus:border-white/40"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 4. Store Branding Profile */}
+        <div className="p-6 rounded-xl border border-white/10 bg-[#0a0a0a] space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-white uppercase tracking-wider">
+              4. Merchant Store Identity
+            </h2>
+            <p className="text-neutral-400 text-[11px] mt-0.5">
+              Shown to customers on the Razorpay payment link checkout page.
+            </p>
           </div>
 
           <div>
-            <label className="block text-neutral-300 font-medium mb-1">
-              Razorpay Webhook Secret (HMAC-SHA256)
-            </label>
+            <label className="block text-neutral-300 font-medium mb-1">Store Display Name</label>
             <input
               type="text"
-              value={webhookSecret}
-              onChange={(e) => setWebhookSecret(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-neutral-900 border border-white/15 text-white font-mono focus:outline-none focus:border-white/40"
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+              className="w-full max-w-sm px-3 py-2 rounded-lg bg-neutral-900 border border-white/15 text-white focus:outline-none focus:border-white/40"
             />
           </div>
         </div>
 
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="btn btn-solid text-xs font-semibold py-2.5 px-6 flex items-center gap-1.5"
-          >
-            <Save className="w-4 h-4" />
-            Save Merchant Configuration
+        {/* Submit */}
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button type="submit" className="btn btn-solid text-xs font-semibold py-2.5 px-6">
+            <Save className="w-3.5 h-3.5 mr-1.5" />
+            Save Store Settings
           </button>
         </div>
       </form>

@@ -16,6 +16,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { fetchOrderDetail, OrderDetail } from "@/lib/api";
+import { getCurrentUser, getMerchantForOrder, MerchantProfile } from "@/lib/auth";
 import SendNudgeModal from "@/components/SendNudgeModal";
 
 export default function OrderDetailPage() {
@@ -23,10 +24,15 @@ export default function OrderDetailPage() {
   const router = useRouter();
   const orderId = params?.id as string;
 
+  const [currentUser, setCurrentUser] = useState<MerchantProfile | null>(null);
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isNudgeModalOpen, setIsNudgeModalOpen] = useState(false);
+
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, []);
 
   const loadOrder = async (isInitial = false) => {
     if (!orderId) return;
@@ -71,8 +77,10 @@ export default function OrderDetailPage() {
   }
 
   const scorePercent = Math.round(order.risk_score * 100);
-  const isHighRisk = order.risk_score >= 0.4467; // Model threshold
+  const activeThreshold = currentUser?.defaultThreshold ?? 0.4467;
+  const isHighRisk = order.risk_score >= activeThreshold;
   const hasNudge = order.nudges && order.nudges.length > 0;
+  const assignedMerchant = getMerchantForOrder(order);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 w-full space-y-8">
@@ -94,9 +102,13 @@ export default function OrderDetailPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-current" />
                 {scorePercent}% {order.risk_band.toUpperCase()}
               </span>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${assignedMerchant.badgeColor}`}>
+                {assignedMerchant.avatar} {assignedMerchant.name}
+              </span>
             </div>
             <p className="text-xs text-neutral-400 mt-0.5">
-              Created {order.created_at ? new Date(order.created_at).toLocaleString("en-IN") : "Recently"}
+              Created {order.created_at ? new Date(order.created_at).toLocaleString("en-IN") : "Recently"} · Account Decision Threshold:{" "}
+              <span className="font-mono text-white">{activeThreshold}</span>
             </p>
           </div>
         </div>
@@ -109,7 +121,7 @@ export default function OrderDetailPage() {
               className="btn btn-solid text-xs font-semibold"
             >
               <Send className="w-3.5 h-3.5 mr-1" />
-              Send Prepaid Nudge (5% off)
+              Send Prepaid Nudge (Choose Discount)
             </button>
           )}
         </div>

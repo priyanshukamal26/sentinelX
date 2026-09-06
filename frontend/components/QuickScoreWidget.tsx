@@ -6,8 +6,8 @@ import { createOrder } from "@/lib/api";
 import Link from "next/link";
 
 export default function QuickScoreWidget() {
-  const [pincode, setPincode] = useState("841301");
-  const [orderValue, setOrderValue] = useState("1499");
+  const [pincode, setPincode] = useState("");
+  const [orderValue, setOrderValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
     id: string;
@@ -16,12 +16,15 @@ export default function QuickScoreWidget() {
     explanation: string;
   } | null>(null);
 
+  const isFormValid = pincode.trim().length >= 6 && parseFloat(orderValue) > 0;
+
   const handleQuickScore = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFormValid) return;
     setLoading(true);
     try {
       const res = await createOrder({
-        pincode,
+        pincode: pincode.trim(),
         payment_mode: "COD",
         order_value: parseFloat(orderValue) || 1499,
         is_first_order: true,
@@ -48,22 +51,25 @@ export default function QuickScoreWidget() {
           <input
             type="text"
             value={pincode}
-            onChange={(e) => setPincode(e.target.value)}
-            placeholder="Pincode (e.g. 841301)"
+            maxLength={6}
+            onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+            placeholder="Pincode (e.g. 560001)"
             className="w-full px-3 py-2 rounded-lg bg-neutral-900 border border-white/15 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/30"
           />
           <input
             type="number"
             value={orderValue}
             onChange={(e) => setOrderValue(e.target.value)}
-            placeholder="Value ₹"
+            placeholder="Order Value ₹ (e.g. 1499)"
             className="w-full px-3 py-2 rounded-lg bg-neutral-900 border border-white/15 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/30"
           />
         </div>
         <button
           type="submit"
-          disabled={loading}
-          className="btn btn-solid text-xs font-semibold w-full sm:w-auto shrink-0 py-2 px-4"
+          disabled={loading || !isFormValid}
+          className={`btn btn-solid text-xs font-semibold w-full sm:w-auto shrink-0 py-2 px-4 ${
+            !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
           {loading ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
